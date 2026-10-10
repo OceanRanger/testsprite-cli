@@ -176,7 +176,7 @@ import {
   type TextTableColumn,
 } from '../lib/text-table.js';
 import { createLiveRunProgress, formatRunProgressLine } from '../lib/run-progress.js';
-import { createTicker } from '../lib/ticker.js';
+import { createTicker, terminalWidth } from '../lib/ticker.js';
 import { RateThrottle } from '../lib/rate-throttle.js';
 import { resolvePortalBase, resolvePortalUrl } from '../lib/facade.js';
 import { emitTargetUrlMismatchAdvisory } from '../lib/v3-advisory.js';
@@ -6764,7 +6764,7 @@ const RUN_HISTORY_TABLE_COLUMNS: ReadonlyArray<TextTableColumn<RunHistoryItem>> 
   { header: 'SOURCE', width: 18, render: run => run.source },
   {
     header: 'ENV',
-    width: rows => Math.max(3, ...rows.map(run => describeRunEnv(run).length)),
+    width: rows => Math.max(3, ...rows.map(run => terminalWidth(describeRunEnv(run)))),
     render: describeRunEnv,
   },
   { header: 'RERUN?', width: 6, render: run => (run.isRerun ? 'yes' : 'no') },
@@ -16694,7 +16694,7 @@ const TEST_LIST_COLUMNS: ReadonlyArray<TextTableColumn<CliTest>> = [
   },
   {
     header: 'NAME',
-    width: rows => Math.max(4, ...rows.map(test => test.name.length)),
+    width: rows => Math.max(4, ...rows.map(test => terminalWidth(test.name))),
     render: test => test.name,
   },
   {
@@ -16711,7 +16711,8 @@ const TEST_LIST_COLUMNS: ReadonlyArray<TextTableColumn<CliTest>> = [
   },
   {
     header: 'ENV',
-    width: rows => Math.max(3, ...rows.map(test => (test.headlineEnvironment?.name ?? '-').length)),
+    width: rows =>
+      Math.max(3, ...rows.map(test => terminalWidth(test.headlineEnvironment?.name ?? '-'))),
     render: test => test.headlineEnvironment?.name ?? '-',
   },
 ];
@@ -17184,8 +17185,9 @@ function uniqueNonNull(values: Array<string | null>): string | undefined {
 }
 
 function pad(s: string, width: number): string {
-  if (s.length >= width) return s;
-  return s + ' '.repeat(width - s.length);
+  const display = terminalWidth(s);
+  if (display >= width) return s;
+  return s + ' '.repeat(width - display);
 }
 
 function createTestCodeCommand(deps: TestDeps): Command {

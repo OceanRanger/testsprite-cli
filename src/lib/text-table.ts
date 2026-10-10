@@ -1,4 +1,5 @@
 import { localValidationError } from './errors.js';
+import { terminalWidth } from './ticker.js';
 
 export interface TextTableColumn<T> {
   header: string;
@@ -73,9 +74,22 @@ export function measureTextColumns<T>(
   rows: readonly T[],
   columns: readonly TextTableColumn<T>[],
 ): number[] {
-  return columns.map(column =>
-    typeof column.width === 'function' ? column.width(rows) : column.width,
-  );
+  return columns.map(column => {
+    // The declared width is a floor, measured however the caller likes
+    // (usually `.length`). It is raised to the widest RENDERED cell, measured
+    // in terminal display columns: `.length` counts UTF-16 code units, so an
+    // East-Asian full-width character (2 terminal cells, 1 code unit) made a
+    // row containing it push every column to its right out of alignment.
+    // Measuring rendered cells here fixes every table that goes through this
+    // module, and an overlong cell widens its column instead of overflowing
+    // it (a long ASCII value had the same misaligning effect before).
+    let width = typeof column.width === 'function' ? column.width(rows) : column.width;
+    for (const row of rows) {
+      const cellWidth = terminalWidth(column.render(row));
+      if (cellWidth > width) width = cellWidth;
+    }
+    return width;
+  });
 }
 
 export function formatTextTableRow(values: readonly string[], widths: readonly number[]): string {
@@ -89,6 +103,7 @@ function textColumnKey(value: string): string {
 }
 
 function pad(value: string, width: number): string {
-  if (value.length >= width) return value;
-  return value + ' '.repeat(width - value.length);
+  const display = terminalWidth(value);
+  if (display >= width) return value;
+  return value + ' '.repeat(width - display);
 }
