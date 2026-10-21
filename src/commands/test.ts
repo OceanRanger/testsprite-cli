@@ -17184,6 +17184,12 @@ function uniqueNonNull(values: Array<string | null>): string | undefined {
   return filtered.every(v => v === first) ? first : undefined;
 }
 
+/**
+ * Right-pad `s` with spaces up to `width` terminal display columns. Measures
+ * display width (CJK/full-width = 2 cells), not UTF-16 length, matching the
+ * shared `text-table` renderer; a value already at or beyond `width` is
+ * returned unchanged.
+ */
 function pad(s: string, width: number): string {
   const display = terminalWidth(s);
   if (display >= width) return s;

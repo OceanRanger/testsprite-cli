@@ -99,6 +99,27 @@ describe('renderTextTable', () => {
     for (const line of lines) expect(line.startsWith('frontend')).toBe(true);
     expect(cellOffset(lines[0]!, 'checkout flow')).toBe(cellOffset(lines[1]!, CJK_NAME));
   });
+
+  it('counts a single emoji as 2 terminal cells', () => {
+    expect(terminalWidth('👍')).toBe(2);
+  });
+
+  it('counts a ZWJ grapheme cluster (family emoji) as one 2-cell unit', () => {
+    // 👨‍👩‍👧 = three Extended_Pictographic joined by ZWJ; the segmenter
+    // yields ONE cluster and the emoji pattern sizes it at 2 cells — the ZWJ
+    // itself adds nothing.
+    expect(terminalWidth('👨‍👩‍👧')).toBe(2);
+    expect(terminalWidth('👍👍')).toBe(4);
+  });
+
+  it('keeps later columns aligned when a name contains emoji', () => {
+    const rows: Row[] = [
+      { id: 'a01', name: 'checkout flow', type: 'frontend' },
+      { id: 'a02', name: '👍 登录支付', type: 'frontend' },
+    ];
+    const lines = renderTextTable(rows, columns).split('\n');
+    expect(cellOffset(lines[1]!, 'frontend')).toBe(cellOffset(lines[2]!, 'frontend'));
+  });
 });
 
 describe('measureTextColumns', () => {

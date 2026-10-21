@@ -1982,7 +1982,13 @@ function defaultProjectListColumns(
   );
 }
 
-function renderProjectListText(
+/**
+ * Render `project list`'s text table over a fetched page. Falls back to the
+ * default column set (ORG/URL included only when the data carries them).
+ * Exported for direct unit coverage of the CJK display-width regression
+ * (#369): later columns must not shift when a project name is full-width.
+ */
+export function renderProjectListText(
   page: Page<CliProject>,
   options: { columns?: string; noHeader?: boolean } = {},
 ): string {
