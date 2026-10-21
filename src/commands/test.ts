@@ -16843,10 +16843,13 @@ function renderStepsText(page: Page<CliTestStep>): string {
     return isSynthetic ? `${clamped} (synthetic assertion failure)` : clamped;
   };
 
+  // action/description are free text (CJK, emoji, ZWJ clusters): measure their
+  // floors in terminal display columns, matching how `pad` measures values —
+  // a UTF-16 `.length` undercounts and shifts later columns between rows.
   const indexWidth = Math.max(5, ...page.items.map(s => String(s.stepIndex).length));
-  const actionWidth = Math.max(6, ...page.items.map(s => s.action.length));
+  const actionWidth = Math.max(6, ...page.items.map(s => terminalWidth(s.action)));
   const statusWidth = 6; // "passed" / "failed" / "—"
-  const descWidth = Math.max(11, ...page.items.map(s => descOf(s).length));
+  const descWidth = Math.max(11, ...page.items.map(s => terminalWidth(descOf(s))));
 
   const header =
     pad('  ', 2) +
