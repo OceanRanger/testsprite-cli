@@ -112,6 +112,13 @@ describe('measureTextColumns', () => {
     const rows: Row[] = [{ id: 'a01', name: 'ok', type: 'frontend' }];
     expect(measureTextColumns(rows, columns)[0]).toBe(8);
   });
+
+  it('includes the header in the width floor', () => {
+    // A narrow declared width must still fit its own header, or the header
+    // overflows and the columns after it misalign.
+    const narrow: TextTableColumn<Row> = { header: 'DURATION', width: 2, render: () => '1m' };
+    expect(measureTextColumns([{ id: 'a01', name: 'ok', type: 'frontend' }], [narrow])[0]).toBe(8);
+  });
 });
 
 describe('formatTextTableRow', () => {

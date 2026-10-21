@@ -82,8 +82,14 @@ export function measureTextColumns<T>(
     // row containing it push every column to its right out of alignment.
     // Measuring rendered cells here fixes every table that goes through this
     // module, and an overlong cell widens its column instead of overflowing
-    // it (a long ASCII value had the same misaligning effect before).
-    let width = typeof column.width === 'function' ? column.width(rows) : column.width;
+    // it (a long ASCII value had the same misaligning effect before). The
+    // header joins the floor too: `--columns` reordering can put a narrow
+    // declared width in front of wider columns, and a header wider than its
+    // own column overflowed it the same way.
+    let width = Math.max(
+      terminalWidth(column.header),
+      typeof column.width === 'function' ? column.width(rows) : column.width,
+    );
     for (const row of rows) {
       const cellWidth = terminalWidth(column.render(row));
       if (cellWidth > width) width = cellWidth;
